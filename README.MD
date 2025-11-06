@@ -1,4 +1,6 @@
 ###Infrastructure Crack Detection Project###
+
+
 An AI-powered system designed to detect cracks in infrastructure images such as concrete structures and metal components. Utilizing transfer learning on a pre-trained ResNet101 model, the project provides a streamlined Streamlit interface for easy image upload and rapid crack detection—eliminating the need for a separate backend server.
 
 ##Project Overview
