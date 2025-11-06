@@ -1,36 +1,33 @@
 import streamlit as st
-import requests
 from PIL import Image
+import numpy as np
+import tensorflow as tf
 
-st.title("Infrastructure Crack Detection")
-st.write("Upload an image of concrete or metal structure, and the app will detect cracks using the trained model.")
+# Load your trained model once and cache it
+@st.cache(allow_output_mutation=True)
+def load_model():
+    return tf.keras.models.load_model("models/resnet101_crack_detector.h5")
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+model = load_model()
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
-    if st.button("Detect Crack"):
-        with st.spinner("Detecting crack..."):
-            files = {"file": uploaded_file.getvalue()}
-            try:
-                response = requests.post("http://127.0.0.1:8000/predict", files=files)
-                response.raise_for_status()
-                result = response.json()
-                pred_label = result.get("predicted_label", "Unknown")
-                pred_prob = result.get("probability", 0.0)
+st.title("Crack Detection")
 
-                if pred_label == "crack":
-                    color = "red"
-                else:
-                    color = "green"
-                st.markdown(
-                    f"<span style='color: {color}; font-weight: bold;'>"
-                    f"Your uploaded image has: {pred_label.upper()} with probability {pred_prob:.4f}"
-                    f"</span>", 
-                    unsafe_allow_html=True,
-                )
-            except requests.exceptions.RequestException as e:
-                st.error(f"Error: {e}")
-else:
-    st.info("Please upload an image first.")
+uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"])
+
+def preprocess_image(image: Image.Image):
+    img = image.resize((224, 224))  # Adjust to your model input size
+    img_array = np.array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+    return img_array
+
+if uploaded_file is not None:
+    img = Image.open(uploaded_file).convert("RGB")
+    st.image(img, caption="Uploaded Image", use_column_width=True)
+
+    input_data = preprocess_image(img)
+    prediction = model.predict(input_data)[0][0]  # Adjust if your model has different output shape
+
+    if prediction > 0.5:  # Threshold for crack detection
+        st.markdown('<p style="color:orange; font-weight:bold;">Crack Detected!</p>', unsafe_allow_html=True)
+    else:
+        st.markdown('<p style="color:green; font-weight:bold;">No Crack Detected</p>', unsafe_allow_html=True)
