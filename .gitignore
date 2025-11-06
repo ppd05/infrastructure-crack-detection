@@ -1,0 +1,9 @@
+# Ignore the virtual environment
+venv/
+# Ignore large models (if hosting elsewhere)
+models/resnet101_crack_detector.h5
+# Ignore Python cache files
+__pycache__/
+*.pyc
+# Ignore other system files if needed
+.DS_Store
