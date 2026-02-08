@@ -17,6 +17,10 @@ from src.crack_localization import CrackLocalizer
 from src.severity_analyzer import CrackSeverityAnalyzer
 from src.report_generator import ReportGenerator
 
+model = None
+localizer = None
+
+
 # Page configuration
 st.set_page_config(
     page_title="Infrastructure Crack Detection",
@@ -27,8 +31,15 @@ st.set_page_config(
 # Load model
 @st.cache_resource
 def load_crack_model():
-    model = load_model('models/resnet101_crack_detector.h5')
-    return model
+    base_dir = os.path.dirname(__file__)
+    model_path = os.path.join(
+        base_dir,
+        "..",
+        "models",
+        "resnet101_crack_detector.h5"
+    )
+    return load_model(model_path)
+
 
 def main():
     # Header
@@ -36,8 +47,8 @@ def main():
     st.write("Upload an image to detect cracks with advanced AI analysis")
     
     # Load model and initializers
-    model = load_crack_model()
-    localizer = CrackLocalizer(model)
+    # model = load_crack_model()
+    # localizer = CrackLocalizer(model)
     analyzer = CrackSeverityAnalyzer()
     report_gen = ReportGenerator()
     
@@ -47,6 +58,13 @@ def main():
         type=["jpg", "jpeg", "png"],
         help="Upload a clear image of concrete or metal infrastructure"
     )
+
+    if uploaded_file is not None:
+        if model is None:
+            with st.spinner("Loading AI model..."):
+                model = load_crack_model()
+                localizer = CrackLocalizer(model)
+
     
     if uploaded_file is not None:
         # Save uploaded file temporarily
